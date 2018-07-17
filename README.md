@@ -1,4 +1,4 @@
-# Soapy
+# Soa.py
 
 This repo is apart of the [warmind project](https://github.com/Project-WARMIND) for a clone of the code see [here](https://gist.github.com/Ekultek/e3dbccb1464b98ae0d5a2e33acfdb821)
 

