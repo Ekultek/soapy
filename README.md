@@ -8,9 +8,26 @@ Post exploitation tools are far and in between, they are used after you have suc
 
  - Do some things, pull hashes, ip addresses, etc.
  - Map the network
- - Anything that has to do with being on the network itself
+ - Anything that has to do with being on the network itself that you don't want to be caught doing
 
 What soa.py does is create a sort of `container` that will host a root terminal shell while the log files are being monitored (default logs: `/var/log`). After you have completed your session, the log files are scrubbed back to the second soa.py was launched.
+
+# Commands
+
+Soapy has a few available commands for you to pass:
+
+```bash
+usage: sudo soa.py [-n|-l|-d] PATH|DIR1 DIR2 ...
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -l PATH, --log PATH   pass the path to log files (*default=/var/log)
+  -d DIR1 DIR2 ... [DIR1 DIR2 ... ...], --dirs DIR1 DIR2 ... [DIR1 DIR2 ... ...]
+                        provide directories that you want files deleted out of
+                        afterwards (*default=None)
+  -n, --no-prompt       delete the files in the provided directory without
+                        prompting for deletion (*default=raw_input)
+```
 
 # Demo video
 
