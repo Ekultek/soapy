@@ -1,5 +1,7 @@
 <div style="text-align:center"><img src ="https://user-images.githubusercontent.com/14183473/42889564-6227433a-8a70-11e8-8c92-71a2f80930be.png" /></div>
 
+###### _As mentioned at the HOPE conference 2018_
+
 This repo is apart of the [warmind project](https://github.com/Project-WARMIND) for a clone of the code see [here](https://gist.github.com/Ekultek/e3dbccb1464b98ae0d5a2e33acfdb821) or you can get the code from [here](https://github.com/ekultek/soapy). For a version you can download with `curl`/`wget` see [here](https://gist.githubusercontent.com/Ekultek/e3dbccb1464b98ae0d5a2e33acfdb821/raw/3b93cb9f9578e61bb774d687c4673a8823d80e16/soa.py).
 
 # Scenario
