@@ -5,7 +5,7 @@ import random
 import argparse
 import platform
 
-__version__ = "0.2"
+__version__ = "0.3"
 __author__ = "Ekultek"
 __progname__ = "soapy"
 __twitter__ = "@stay__salty"
@@ -32,6 +32,13 @@ class Parser(argparse.ArgumentParser):
         parser.add_argument(
             "-n", "--no-prompt", dest="noPrompt", action="store_true", default=False,
             help="delete the files in the provided directory without prompting for deletion (*default=raw_input)"
+        )
+        parser.add_argument(
+            "-m", "--line-monitor", dest="monitorFromLine", metavar="LINE", default=1, type=int,
+            help="pass a number of lines from the end of the file to monitor from. "
+                 "(IE passing 3 will start the monitor three lines up from the last line "
+                 "passing 5 will start the monitor five lines up from the last line) "
+                 "(*default=1)"
         )
         return parser.parse_args()
 
@@ -86,7 +93,7 @@ def needs_history_cleared():
         os.system("cat /dev/null > ~/.bash_history && history -c && exit")
 
 
-def walkdir(path, get_logs=True):
+def walkdir(path, line_number=1, get_logs=True):
     """
     find the current last lines on the log files
     these will be used as reference later to scrub the logs
@@ -118,7 +125,7 @@ def walkdir(path, get_logs=True):
             filenames.append(os.path.join(root, name))
     if get_logs:
         for f in filenames:
-            log_data.append((f, tails(f, 1)))
+            log_data.append((f, tails(f, line_number)))
         return log_data
     else:
         return filenames
@@ -149,6 +156,7 @@ def main():
     opt = Parser().optparse()
 
     flatten = lambda l: [item for sublist in l for item in sublist]
+    ordinal = lambda n: "%d%s" % (n, "tsnrhtdd"[(n/10 % 10 != 1)*(n % 10 < 4)*n % 10::4])
 
     if opt.dirsToCheckAfter is None:
         print("no directories will be scanned after session is completed")
@@ -169,7 +177,8 @@ def main():
         path = opt.logPath
     print("extracting last known log from: '{}'".format(path))
     current_time = time.time()
-    current_last_lines = walkdir(path)
+    print("monitoring from the {} line from the bottom".format(ordinal(opt.monitorFromLine)))
+    current_last_lines = walkdir(path, line_number=opt.monitorFromLine)
     print("log files are being monitored, new root terminal has been launched, type `exit` to leave the terminal.")
     print(seperator)
     file_path = open_next_terminal()
